@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+    container_name: redis
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    container_name: elasticsearch
+
+  master:
+    build: ./master_node
+    depends_on:
+      - redis
+      - elasticsearch
+    container_name: master
+    volumes:
+      - .:/app
+
+  crawler:
+    build: ./crawler_node
+    depends_on:
+      - redis
+    container_name: crawler
+    volumes:
+      - .:/app
+    deploy:
+      replicas: 2  # Scale as needed
+
+  indexer:
+    build: ./indexer_node
+    depends_on:
+      - redis
+      - elasticsearch
+    container_name: indexer
+    volumes:
+      - .:/app
+
+  client:
+    build: ./client
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5000:5000"
+    container_name: client
+    volumes:
+      - .:/app

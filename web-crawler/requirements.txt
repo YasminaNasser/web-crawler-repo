@@ -1,0 +1,7 @@
+celery
+redis
+elasticsearch
+requests
+beautifulsoup4
+flask
+pyyaml

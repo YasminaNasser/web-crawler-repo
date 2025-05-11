@@ -1,0 +1,13 @@
+redis:
+  host: <Private-IP-of-Redis-Server>  # example: 10.0.2.10
+
+elasticsearch:
+  host: <Private-IP-of-Indexer-Server>  # example: 10.0.2.20
+
+
+seeds:
+  - https://example.com
+  - https://example.org
+
+crawl_delay: 2
+index_poll_delay: 2

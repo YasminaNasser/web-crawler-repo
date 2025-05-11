@@ -1,0 +1,36 @@
+import redis
+import json
+import time
+
+class RedisQueue:
+    def __init__(self, config):
+        self.client = redis.Redis(host=config['host'], port=config['port'], db=config.get('db', 0))
+        self.to_visit = 'crawler:to_visit'
+        self.content = 'crawler:content'
+        self.heartbeat = 'heartbeat:'
+
+    def push_url(self, url):
+        self.client.sadd("visited", url)  # Mark visited first to avoid dupes
+        self.client.rpush(self.to_visit, url)
+
+    def pop_url(self):
+        url = self.client.lpop(self.to_visit)
+        return url.decode() if url else None
+
+    def push_content(self, url, text):
+        doc = json.dumps({'url': url, 'text': text})
+        self.client.rpush(self.content, doc)
+
+    def pop_content(self):
+        doc = self.client.lpop(self.content)
+        return json.loads(doc) if doc else None
+
+    def set_heartbeat(self, node_id):
+        self.client.set(self.heartbeat + node_id, time.time())
+
+    def get_heartbeats(self):
+        keys = self.client.keys(self.heartbeat + '*')
+        return {
+            key.decode().replace(self.heartbeat, ''): self.client.get(key).decode()
+            for key in keys
+        }
